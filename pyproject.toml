@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+packages = [
+    "simpleneat",
+    "simpleneat.algorithm",
+    "simpleneat.algorithm.neat",
+    "simpleneat.common",
+    "simpleneat.common.functions",
+    "simpleneat.genome",
+    "simpleneat.genome.gene",
+    "simpleneat.genome.gene.conn",
+    "simpleneat.genome.gene.node",
+    "simpleneat.genome.operations",
+    "simpleneat.genome.operations.crossover",
+    "simpleneat.genome.operations.distance",
+    "simpleneat.genome.operations.mutation",
+    "simpleneat.problem",
+    "simpleneat.problem.classification",
+    "simpleneat.problem.func_fit",
+    "simpleneat.problem.rl",
+]
+
+[tool.setuptools.package-dir]
+simpleneat = "src"
+
+[project]
+name = "simpleneat"
+version = "0.1.0"
+description = "A minimal JAX-based SimpleNEAT starting point for neuroevolution research."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Mil Fujiwara" }]
+dependencies = [
+    "jax>=0.4.28",
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+rl = [
+    "gym>=0.19",
+    "imageio>=2.34",
+    "pillow>=10.0",
+    "slimevolleygym>=0.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/EMI-Group/tensorneat"
