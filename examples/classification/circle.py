@@ -39,7 +39,7 @@ def main():
         generation_limit=200,
         fitness_target=-0.008, # -0.02
         seed=42,
-        log_path="examples/classification/circle_history.csv",
+        log_path="results/circle_history.csv",
     )
 
     state = pipeline.setup()
@@ -47,8 +47,8 @@ def main():
     pipeline.show(
         state,
         best,
-        test_decision_boundary_path="examples/classification/circle_test_decision_boundary.svg",
-        train_decision_boundary_path="examples/classification/circle_train_decision_boundary.svg",
+        test_decision_boundary_path="results/circle_test_decision_boundary.svg",
+        train_decision_boundary_path="results/circle_train_decision_boundary.svg",
         x_range=(-5.0, 5.0),
         y_range=(-5.0, 5.0),
     )
