@@ -63,13 +63,13 @@ def build_parser():
     parser.add_argument(
         "--log-path",
         type=str,
-        default="examples/rl/slimevolley_evojax_history.csv",
+        default="results/slimevolley_evojax_history.csv",
         help="CSV path for generation statistics. Use an empty string to disable logging.",
     )
     parser.add_argument(
         "--gif-path",
         type=str,
-        default="examples/rl/slimevolley_evojax_best.gif",
+        default="results/slimevolley_evojax_best.gif",
         help="Optional output path for a GIF of the best genome replay. Use an empty string to disable.",
     )
     parser.add_argument(
@@ -99,7 +99,7 @@ def build_parser():
     parser.add_argument(
         "--save-path",
         type=str,
-        default="examples/rl/slimevolley_evojax_best_genome.pkl",
+        default="results/slimevolley_evojax_best_genome.pkl",
         help="Output path for saving the best genome and metadata once the save threshold is reached.",
     )
     return parser

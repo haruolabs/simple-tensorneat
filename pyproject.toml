@@ -37,10 +37,15 @@ license = { file = "LICENSE" }
 authors = [{ name = "Mil Fujiwara" }]
 dependencies = [
     "jax>=0.4.28",
+    "matplotlib>=3.10.8",
+    "networkx>=3.4.2",
     "numpy>=1.24",
 ]
 
 [project.optional-dependencies]
+export = [
+    "onnx>=1.16",
+]
 rl = [
     "gym>=0.19",
     "imageio>=2.34",

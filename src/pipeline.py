@@ -9,6 +9,7 @@ import numpy as np
 from simpleneat.algorithm import BaseAlgorithm
 from simpleneat.common import State, StatefulBaseClass
 from simpleneat.problem import BaseProblem
+from simpleneat.yed_export import export_yed_json as export_yed_graph_json
 
 
 class Pipeline(StatefulBaseClass):
@@ -20,6 +21,9 @@ class Pipeline(StatefulBaseClass):
         fitness_target: float = 1.0,
         generation_limit: int = 1000,
         log_path: str | None = None,
+        yed_export: bool = True,
+        yed_export_path: str | None = None,
+        yed_include_unused_nodes: bool = True,
     ):
         self.algorithm = algorithm
         self.problem = problem
@@ -27,6 +31,9 @@ class Pipeline(StatefulBaseClass):
         self.fitness_target = fitness_target
         self.generation_limit = generation_limit
         self.log_path = Path(log_path) if log_path is not None else None
+        self.yed_export = yed_export
+        self.yed_export_path = Path(yed_export_path) if yed_export_path is not None else None
+        self.yed_include_unused_nodes = yed_include_unused_nodes
         self.pop_size = self.algorithm.pop_size
 
         if algorithm.num_inputs != self.problem.input_shape[-1]:
@@ -82,6 +89,7 @@ class Pipeline(StatefulBaseClass):
                 break
         if int(state.generation) >= self.generation_limit:
             print("Generation limit reached!", flush=True)
+        self._export_artifacts(state)
         return state, self.best_genome
 
     def analysis(self, state, pop, fitnesses, cost_time):
@@ -190,3 +198,45 @@ class Pipeline(StatefulBaseClass):
                     f"{fitness_std:.6f}",
                 ]
             )
+
+    def _export_artifacts(self, state):
+        self._export_yed_json(state)
+
+    def _export_yed_json(self, state):
+        if not self.yed_export or self.best_genome is None:
+            return
+
+        genome = getattr(self.algorithm, "genome", None)
+        if genome is None or not hasattr(genome, "network_dict"):
+            return
+
+        export_yed_graph_json(
+            state,
+            genome,
+            individual=self.best_genome,
+            save_path=self._resolve_yed_export_path(),
+            include_unused_nodes=self.yed_include_unused_nodes,
+            metadata={
+                "algorithm": self.algorithm.__class__.__name__,
+                "problem": self.problem.__class__.__name__,
+                "best_fitness": self.best_fitness,
+                "generation": int(state.generation),
+            },
+            graph_id=f"{self.algorithm.__class__.__name__}_{self.problem.__class__.__name__}",
+        )
+
+    def _resolve_yed_export_path(self) -> Path:
+        if self.yed_export_path is not None:
+            return self.yed_export_path
+
+        if self.log_path is None:
+            return Path("best_network.yed.json")
+
+        stem = self.log_path.stem
+        if stem.endswith("_history"):
+            stem = stem[: -len("_history")]
+        if not stem:
+            stem = "best_network"
+        elif not stem.endswith("_best"):
+            stem = f"{stem}_best"
+        return self.log_path.with_name(f"{stem}.yed.json")

@@ -13,13 +13,14 @@ smaller starting point under `src/`.
 - `rl` problem: `SlimeVolleyEnv`
 - Optional gradient descent inside `NEAT`, enabled by default for differentiable
   problems such as function fitting
+- Default yEd Live JSON export for the best genome after `Pipeline.auto_run()`
+- ONNX export for feed-forward genomes
 - Examples for XOR and a SlimeVolley smoke test
 
 ## Not Included
 
 - HyperNEAT
 - Recurrent genomes
-- Symbolic export / visualization helpers
 - Brax, Gymnax, Mujoco adapters
 - `xor3d.py`
 
@@ -74,6 +75,10 @@ state = pipeline.setup()
 state, best = pipeline.auto_run(state)
 pipeline.show(state, best)
 ```
+
+By default, `Pipeline.auto_run()` also writes a yEd Live-friendly JSON file for
+the best genome. If `log_path="results/xor_history.csv"`, the export is written
+to `results/xor_best.yed.json`.
 
 ## Upstream Notes
 
