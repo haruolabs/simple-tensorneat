@@ -37,9 +37,9 @@ def build_parser():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--pop-size", type=int, default=256)
     parser.add_argument("--species-size", type=int, default=24)
-    parser.add_argument("--generations", type=int, default=1000) # 400
-    parser.add_argument("--repeat-times", type=int, default=4)
-    parser.add_argument("--max-step", type=int, default=1000) # 1000
+    parser.add_argument("--generations", type=int, default=1000) # 400->1000
+    parser.add_argument("--repeat-times", type=int, default=4) # Number of rollouts
+    parser.add_argument("--max-step", type=int, default=10000) # 1000, if test=False, the game will terminate at max_steps (even before losing all lives)
     parser.add_argument(
         "--feature-mode",
         type=str,
@@ -59,7 +59,8 @@ def build_parser():
         default=0.0, # 0.05
         help="Additional shaping reward for right-agent ball contacts during training.",
     )
-    parser.add_argument("--fitness-target", type=float, default=15.0)
+    # Reward is +1 for each win within a rollout. If repeat_times=4 with max_lives=4, max reward is 4x4=+16, which means winning 16 times straight
+    parser.add_argument("--fitness-target", type=float, default=8.0)
     parser.add_argument(
         "--log-path",
         type=str,
@@ -128,7 +129,7 @@ def main():
                 max_conns=128, # 256
                 init_hidden_layers=(),
                 node_gene=BiasNode(
-                    activation_options=[ACT.tanh, ACT.identity],
+                    activation_options=[ACT.tanh, ACT.identity, ACT.lelu], # tanh, identity
                     aggregation_options=AGG.sum,
                 ),
                 conn_gene=DefaultConn(
@@ -149,7 +150,7 @@ def main():
         problem=EvoJAXSlimeVolleyEnv(
             max_step=args.max_step,
             repeat_times=args.repeat_times,
-            test=False,
+            test=True, # False for continuing the game after max_lives
             action_threshold=args.action_threshold,
             hit_reward_scale=args.hit_reward_scale,
             feature_mode=args.feature_mode,
@@ -206,31 +207,34 @@ def main():
     )
     print(f"best genome test-mode reward: {float(eval_reward):.4f}")
 
-    if float(eval_reward) >= args.save_threshold:
-        extra_eval_rewards = []
-        for i in range(args.extra_eval_games):
-            eval_key = jax.random.fold_in(state.randkey, i + 1)
-            reward = eval_problem.evaluate(
-                state,
-                eval_key,
-                pipeline.algorithm.forward,
-                transformed,
-            )
-            extra_eval_rewards.append(float(reward))
-        extra_eval_mean = float(np.mean(extra_eval_rewards)) if extra_eval_rewards else float("nan")
-        print("eval rewards:", extra_eval_rewards)
-        print(
-            f"additional test=True evaluation over {args.extra_eval_games} games: "
-            f"mean reward {extra_eval_mean:.4f}"
+    #if float(eval_reward) >= args.save_threshold:
+    extra_eval_rewards = []
+    extra_eval_rollouts = 8
+    #for i in range(args.extra_eval_games):
+    for i in range(extra_eval_rollouts):
+        eval_key = jax.random.fold_in(state.randkey, i + 1)
+        reward = eval_problem.evaluate(
+            state,
+            eval_key,
+            pipeline.algorithm.forward,
+            transformed,
         )
-        save_best_genome(
-            args.save_path,
-            args,
-            best,
-            eval_reward,
-            extra_eval_rewards,
-            pipeline,
-        )
+        extra_eval_rewards.append(float(reward))
+    extra_eval_mean = float(np.mean(extra_eval_rewards)) if extra_eval_rewards else float("nan")
+    print("eval rewards:", extra_eval_rewards)
+    print(
+        #f"additional test=True evaluation over {args.extra_eval_games} games: "
+        f"additional test=True evaluation over {extra_eval_rollouts} games: "
+        f"mean reward {extra_eval_mean:.4f}"
+    )
+    save_best_genome(
+        args.save_path,
+        args,
+        best,
+        eval_reward,
+        extra_eval_rewards,
+        pipeline,
+    )
 
 
 if __name__ == "__main__":
